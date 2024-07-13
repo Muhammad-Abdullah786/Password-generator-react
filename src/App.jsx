@@ -1,107 +1,81 @@
-import { useState, useCallback, useEffect } from "react";
-import * as React from "react";
-import Button from "@mui/material/Button";
-import { useSnackbar } from "notistack";
+import React, { useRef, useState, useCallback, useEffect } from "react";
+
 function App() {
-  const [length, setLength] = useState(8);
-  const [numberAllowed, setNumberAllowed] = useState(false);
-  const [charAllowed, setCharAllowed] = useState(false);
+  // creating password generator
   const [password, setPassword] = useState("");
-  const { enqueueSnackbar } = useSnackbar();
-
-  const handleClick = () => {
-    navigator.clipboard.writeText(password);
-    enqueueSnackbar("Password Copied", { variant : 'success' });
-  };
-
-  // we will use useCallback because the password gen has dependencise which are char and length and numvber
-
-  // useCallback take function and dependencise as a funtion
-
-  // make password generator
-  const passwordGenerator = useCallback(() => {
+  const [length, setLength] = useState(8);
+  const [number, setNumber] = useState(false);
+  const [character, setCharacter] = useState(false);
+  // ref hook
+  const passwordRef = useRef(null);
+  // now password functionality
+  const generator = useCallback(() => {
     let pass = "";
-    let str = "QWERTYUIOPLKJHGFDSAZXCVBNMqwertyuioplkjhgfdsazxcvbnm";
-    if (numberAllowed) {
-      str += "1234567890";
-    }
-    if (charAllowed) {
-      str += '!@#$%^&*()_+{}":?><~`';
-    }
-    for (let i = 0; i <= length; i++) {
+    let str = "ABCDEFGHIJKLMNOPQRSTUVWXYabcdefghijklmnopqrstuvwxyz";
+    if (number) str += "0123456789";
+    if (character) str += "{}!@#$%^&*()*+,-./:;<=>?@";
+
+    for (let i = 0; i < length; i++) {
       let char = Math.floor(Math.random() * str.length);
       pass += str.charAt(char);
     }
-    setPassword(pass);
-  }, [password, charAllowed, numberAllowed, length]);
-  //w now we cannot render theis function to render it we will use useEffect it take a funtuion and dependency
 
+    setPassword(pass);
+  }, [length, number, character, setPassword, password]);
+
+  const copyPassword = useCallback(() => {
+    passwordRef.current?.select();
+    window.navigator.clipboard.writeText(password);
+  }, [password]);
   useEffect(() => {
-    passwordGenerator();
-  }, [length, numberAllowed, charAllowed]);
+    generator();
+  }, [length, character, number, setPassword]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-800 p-4">
-      <h1 className="text-white text-2xl bg-slate-600 rounded-lg flex justify-center items-center m-3 p-2">
-        Password Generator
-      </h1>
-
-      <div className="flex flex-col items-center w-full max-w-md p-4 bg-gray-700 rounded-lg">
-        <div className="flex items-center w-full mb-4">
+    <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-white">
+      <h1 className="text-6xl mb-8">Password Generator</h1>
+      <div className="w-full max-w-md px-8 py-6 bg-fuchsia-950 rounded-lg shadow-md flex flex-col items-center gap-4">
+        <input
+          ref={passwordRef}
+          type="text"
+          placeholder="Password"
+          className="w-full p-3 max-w-md bg-gray-800 rounded outline-none text-white"
+          value={password}
+          readOnly
+        />
+        <button
+          onClick={copyPassword}
+          className="py-2 px-4 bg-blue-700 text-white rounded outline-none hover:bg-blue-300 active:bg-stone-600 transition-colors"
+        >
+          Copy
+        </button>
+        <div className="flex items-center gap-4">
           <input
-            className="w-full p-2 rounded-md bg-gray-900 text-white"
-            type="text"
-            value={password}
-            placeholder="Password"
-            readOnly
-          />
-
-          <Button
-            className="ml-2 p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-            onClick={handleClick}
-          >
-            Copy
-          </Button>
-        </div>
-
-        <div className="w-full mb-4">
-          <label className="text-white mr-2">Length: {length}</label>
-          <input
-            className="w-full"
             type="range"
-            min={8}
-            max={30}
+            min={6}
+            max={40}
             value={length}
+            className="flex-grow"
             onChange={(e) => setLength(e.target.value)}
           />
+          <label htmlFor="">Length: {length}</label>
         </div>
-
-        <div className="flex items-center w-full mb-2">
+        <div className="flex items-center gap-4">
           <input
-            className="mr-2"
             type="checkbox"
-            checked={charAllowed}
-            onChange={() => setCharAllowed((prev) => !prev)}
+            checked={number}
+            className="cursor-pointer"
+            onChange={() => setNumber((prev) => !prev)}
           />
-          <label className="text-white">Characters</label>
-        </div>
-
-        <div className="flex items-center w-full mb-4">
+          <label htmlFor="">Number</label>
           <input
-            className="mr-2"
             type="checkbox"
-            checked={numberAllowed}
-            onChange={() => setNumberAllowed((prev) => !prev)}
+            checked={character}
+            className="cursor-pointer"
+            onChange={() => setCharacter((prev) => !prev)}
           />
-          <label className="text-white">Numbers</label>
+          <label htmlFor="">Character</label>
         </div>
-
-        <button
-          className="p-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-          onClick={passwordGenerator}
-        >
-          Generate Password
-        </button>
       </div>
     </div>
   );
